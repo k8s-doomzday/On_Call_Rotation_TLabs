@@ -9,12 +9,12 @@ An enterprise-grade, zero-dependency AI On-Call Operations & Automated Incident 
 ```text
 oncall-ops-poc/
 ├── docs/                   # Helm chart deployment package
+│   └── demo.mp4            # Demo video of installation and navigation - Download as RAW file since GH only supports up to 50MB
 │   └── screenshots/
 │       ├── 1-cluster-deployment.png            # Image of container build, deployment and pod running   
 │       ├── 2-dashboard-OC.png                  # Image of the OC rotation
 │       └── 3-indicent-ai.triage.png            # Image of Webhook alert with Gemini recommended action
 │       └── 4-k8s-manifest-inspector.png        # Image of k8s deployment, service and namespace configuration
-│       └── demo.mp4            # Demo video of installation and navigation - Download as RAW file since GH only supports up to 50MB
 ├── chart/                   # Helm chart deployment package
 │   ├── Chart.yaml
 │   ├── values.yaml
