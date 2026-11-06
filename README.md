@@ -87,3 +87,11 @@ A short video demonstration of the incident dispatch and AI triage workflow is a
 ## Cleanup and Uninstall
 
 When done with POC, user can issue following commands to fully uninstall the application and associated resources
+```
+helm uninstall oncall-ops -n operations
+```
+
+Verify all resources are gone by running
+```
+kubectl get all -n operations
+```
