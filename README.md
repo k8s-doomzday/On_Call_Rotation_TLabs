@@ -32,22 +32,30 @@ oncall-ops-poc/
 ## Local Deployment
 
 Utilizing Rancher-Desktop and Helm for local validation testing. End-User can use their choice of local kubernetes environment. First verify your local instance is actively running and you are directed to your local Kubernetes Cluster (.kube directory). User will then clone repository and then, from the root directory, user simply can run:
+
 ```
 docker build -t oncall-ops:latest .
 helm upgrade --install oncall-ops ./chart
 ```
+
 After install, user can run following command to verify pod is running:
+
 ```
 kubectl get pods -n operations #There should be 1 pod running
 ```
-User can now open a web browser of their choosing and navigate to: **localhost:30080**
 
-**Gotchas while initial implementation
+User can now open a web browser of their choosing and navigate to:
+localhost:30080
+
+Gotchas while initial implementation
 1. Docker container build had cached image, run following to clear cache and ensure full new build.
+
 ```
 docker build --no-cache -t oncall-ops:latest .
 ```
+
 2. With new image, pod was not instantly refreshing the changes.
+
 ```
 kubectl rollout restart deployment/oncall-ops-n operations
 ```
