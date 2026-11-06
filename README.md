@@ -6,6 +6,7 @@ An enterprise-grade, zero-dependency AI On-Call Operations & Automated Incident 
 
 ## Project Structure
 
+```text
 oncall-ops-poc/
 ├── docs/                   # Helm chart deployment package
 │   ├── demo.mp4            # Demo video of installation and navigation
@@ -40,6 +41,16 @@ After install, user can run following command to verify pod is running:
 kubectl get pods -n operations #There should be 1 pod running
 ```
 User can now open a web browser of their choosing and navigate to: **localhost:30080**
+
+**Gotchas while initial implementation
+1. Docker container build had cached image, run following to clear cache and ensure full new build.
+```
+docker build --no-cache -t oncall-ops:latest .
+```
+2. With new image, pod was not instantly refreshing the changes.
+```
+kubectl rollout restart deployment/oncall-ops-n operations
+```
 
 ## Evidence of Successful Run
 
