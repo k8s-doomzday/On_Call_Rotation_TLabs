@@ -9,7 +9,7 @@ graph TD
 
     subgraph Kubernetes Cluster / Azure AKS
         NS[Namespace: operations]
-        ING[Service / Ingress: NodePort 30080 or AKS LoadBalancer (Preferred)]
+        ING[Service / Ingress: NodePort 30080 or AKS LoadBalancer - Preferred]
         POD[Nginx Pod / On-Call App]
     end
 
