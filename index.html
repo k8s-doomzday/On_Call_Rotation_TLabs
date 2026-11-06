@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI On-Call Operations — Tessera Labs AI</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { slate: { 850: '#151f32', 900: '#0f172a', 950: '#020617' } } } }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Top Header Navigation -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="bg-indigo-600 p-2 rounded-lg text-white">
+        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white">Tessera AI On-Call Operations</h1>
+        <p class="text-xs text-indigo-400 font-mono">Tessera Labs AI • Incident Management & Triage POC</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden md:flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
+        <i data-lucide="key" class="w-3.5 h-3.5 text-slate-400"></i>
+        <input id="apiKeyInput" type="password" placeholder="Optional Gemini API Key" class="bg-transparent text-xs text-slate-200 placeholder-slate-500 focus:outline-none w-48">
+      </div>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> K8s Cluster Active
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left Column: Schedule & Webhook Simulator -->
+    <div class="space-y-6">
+      
+      <!-- On-Call Roster Card with Test Email Button -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i> Active On-Call Roster
+          </h2>
+          <button onclick="toggleScheduleModal()" class="text-xs bg-indigo-950 hover:bg-indigo-900 text-indigo-300 px-2.5 py-1 rounded border border-indigo-800/60 transition flex items-center gap-1">
+            <i data-lucide="calendar-sync" class="w-3.5 h-3.5"></i> Manage
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <div class="p-3 rounded-lg bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-400">Primary Engineer</p>
+              <p class="text-sm font-medium text-slate-200" id="primaryName">Bob Dole (SRE)</p>
+              <p class="text-xs text-indigo-400 font-mono mt-0.5" id="primaryEmail">bob.dole@company.com</p>
+            </div>
+            <span class="text-xs bg-emerald-950 text-emerald-400 px-2 py-1 rounded font-mono h-fit">On Duty</span>
+          </div>
+
+          <div class="p-3 rounded-lg bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-400">Secondary / Escalate</p>
+              <p class="text-sm font-medium text-slate-200" id="secondaryName">Dick Cheney (Platform)</p>
+              <p class="text-xs text-slate-500 font-mono mt-0.5" id="secondaryEmail">dick.cheney@company.com</p>
+            </div>
+            <span class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded font-mono h-fit">Standby</span>
+          </div>
+        </div>
+
+        <!-- Test Email Alert Button -->
+        <button onclick="sendTestEmail()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg font-medium transition flex items-center justify-center gap-2 border border-slate-700 shadow-sm">
+          <i data-lucide="mail-check" class="w-4 h-4 text-blue-400"></i> Test Email Alert to Primary
+        </button>
+      </div>
+
+      <!-- Webhook Simulator Card (One-Click Generation) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <i data-lucide="webhook" class="w-4 h-4 text-amber-400"></i> Webhook Simulator
+          </h2>
+          <span class="text-xs text-slate-400 font-mono">POST /api/v1/webhook</span>
+        </div>
+        <p class="text-xs text-slate-400">Click below to simulate a production incident payload, trigger automated agent email notifications, and feed the AI triage engine.</p>
+        
+        <button onclick="simulateNewIncident()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs rounded-lg font-semibold transition flex items-center justify-center gap-2 shadow-lg">
+          <i data-lucide="zap" class="w-4 h-4"></i> Simulate Webhook / Ingest Incident
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Right 2 Columns: Telemetry, AI Diagnostic Playbook & K8s Manifest -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Telemetry Payload Window -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i> Live Telemetry Payload
+          </h2>
+          <div class="flex items-center gap-2">
+            <span id="incidentIdBadge" class="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded">No incident selected</span>
+            <button id="analyzeButton" onclick="runAiAnalysis()" disabled class="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs px-3.5 py-1.5 rounded-lg font-medium shadow transition disabled:opacity-40">
+              <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Analyze with Gemini AI
+            </button>
+          </div>
+        </div>
+        <pre id="telemetryView" class="bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto min-h-[110px] flex items-center justify-center text-slate-500">Click "Simulate Webhook / Ingest Incident" on the left to generate an instance...</pre>
+      </div>
+
+      <!-- AI Incident Diagnostics & Playbook Panel -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i> AI Incident Diagnostics & Playbook
+          </h2>
+          <span id="aiExecutionModeBadge" class="text-xs px-2.5 py-1 rounded-full font-mono bg-slate-950 text-slate-400 border border-slate-800">
+            Awaiting Telemetry
+          </span>
+        </div>
+        
+        <div id="aiPlaybookContent" class="text-sm text-slate-300 space-y-3 min-h-[140px] flex flex-col justify-center items-center text-center">
+          <p class="text-slate-500 text-xs italic">Trigger telemetry analysis above to generate AI root cause summaries and safe diagnostic playbooks.</p>
+        </div>
+      </div>
+
+      <!-- K8s Manifest Inspector Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <i data-lucide="file-code" class="w-4 h-4 text-sky-400"></i> Kubernetes Deployment Manifest Inspector
+          </h2>
+          <span class="text-xs font-mono text-slate-400">chart/templates/deployment.yaml</span>
+        </div>
+        <pre class="bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs font-mono text-sky-300 overflow-x-auto max-h-40">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-ops
+  namespace: operations
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oncall-ops
+  template:
+    metadata:
+      labels:
+        app: oncall-ops
+    spec:
+      containers:
+      - name: oncall-ops
+        image: oncall-ops:latest
+        ports:
+        - containerPort: 80</pre>
+      </div>
+
+      <!-- Audit & Notification Dispatch Log -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-white flex items-center gap-2 mb-3">
+          <i data-lucide="mail" class="w-4 h-4 text-blue-400"></i> Dispatch & Notification Audit Trail
+        </h2>
+        <div id="auditLogContainer" class="space-y-2 text-xs font-mono">
+          <div class="p-2.5 rounded bg-slate-950 border border-slate-800/60 text-slate-400 flex items-center justify-between">
+            <span>[System Boot] Namespace operations initialized. Primary: bob.dole@company.com</span>
+            <span class="text-slate-600">Just now</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Schedule Management Modal -->
+  <div id="scheduleModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i> Configure On-Call Rotation & Emails
+        </h3>
+        <button onclick="toggleScheduleModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Primary Engineer Name</label>
+          <input id="modalPrimaryName" type="text" value="Bob Dole (SRE)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 mb-2">
+          <label class="block text-slate-400 mb-1">Primary Engineer Email</label>
+          <input id="modalPrimaryEmail" type="text" value="bob.dole@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+        </div>
+        <div class="pt-2">
+          <label class="block text-slate-400 mb-1">Secondary Engineer Name</label>
+          <input id="modalSecondaryName" type="text" value="Dick Cheney (Platform)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 mb-2">
+          <label class="block text-slate-400 mb-1">Secondary Engineer Email</label>
+          <input id="modalSecondaryEmail" type="text" value="dick.cheney@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="toggleScheduleModal()" class="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-xs hover:bg-slate-700">Cancel</button>
+        <button onclick="saveSchedule()" class="px-3 py-1.5 rounded bg-indigo-600 text-white text-xs hover:bg-indigo-500 font-medium">Save Roster</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Logic -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    let currentIncident = null;
+    let incidentCounter = 8092;
+
+    const mockIncidentPool = [
+      {
+        service: "operations-db-cluster",
+        severity: "CRITICAL",
+        error: "ConnectionPoolExhausted: Max connections (100) reached",
+        metrics: { activeConnections: 100, queueLength: 42, cpuUsage: "89%" }
+      },
+      {
+        service: "oncall-worker-pod",
+        severity: "HIGH",
+        error: "OOMKilled: Container exceeded memory limit (2Gi / 2Gi)",
+        metrics: { memoryUsage: "100%", restartCount: 3, heapAlloc: "1.9GB" }
+      },
+      {
+        service: "ingress-api-gateway",
+        severity: "WARNING",
+        error: "GatewayTimeout: Upstream service did not respond within 30000ms",
+        metrics: { p99Latency: "3200ms", errorRate: "4.8%", activeRequests: 1250 }
+      }
+    ];
+
+    function toggleScheduleModal() {
+      const modal = document.getElementById('scheduleModal');
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function saveSchedule() {
+      const newPrimaryName = document.getElementById('modalPrimaryName').value;
+      const newPrimaryEmail = document.getElementById('modalPrimaryEmail').value;
+      const newSecondaryName = document.getElementById('modalSecondaryName').value;
+      const newSecondaryEmail = document.getElementById('modalSecondaryEmail').value;
+      
+      document.getElementById('primaryName').textContent = newPrimaryName;
+      document.getElementById('primaryEmail').textContent = newPrimaryEmail;
+      document.getElementById('secondaryName').textContent = newSecondaryName;
+      document.getElementById('secondaryEmail').textContent = newSecondaryEmail;
+      
+      toggleScheduleModal();
+
+      const logContainer = document.getElementById('auditLogContainer');
+      const timestamp = new Date().toLocaleTimeString();
+      logContainer.insertAdjacentHTML('afterbegin', `
+        <div class="p-2.5 rounded bg-slate-950 border border-slate-800/60 text-slate-300 flex items-center justify-between">
+          <span>📅 Schedule updated. Primary routed to: <strong class="text-indigo-400">${newPrimaryEmail}</strong></span>
+          <span class="text-slate-500">${timestamp}</span>
+        </div>
+      `);
+    }
+
+    function sendTestEmail() {
+      const primaryEmail = document.getElementById('primaryEmail').textContent;
+      const primaryName = document.getElementById('primaryName').textContent;
+      const logContainer = document.getElementById('auditLogContainer');
+      const timestamp = new Date().toLocaleTimeString();
+
+      logContainer.insertAdjacentHTML('afterbegin', `
+        <div class="p-3 rounded bg-blue-950/40 border border-blue-800/60 text-slate-300 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-blue-400">✉️</span>
+            <div>
+              <p class="font-medium text-slate-200">Test Email Notification Dispatched</p>
+              <p class="text-[11px] text-slate-400">Successfully sent diagnostic ping to <strong class="text-indigo-400">${primaryName} &lt;${primaryEmail}&gt;</strong></p>
+            </div>
+          </div>
+          <span class="text-slate-500 text-[11px]">${timestamp}</span>
+        </div>
+      `);
+    }
+
+    function simulateNewIncident() {
+      incidentCounter++;
+      const randomTemplate = mockIncidentPool[Math.floor(Math.random() * mockIncidentPool.length)];
+      
+      currentIncident = {
+        id: `INC-${incidentCounter}`,
+        service: randomTemplate.service,
+        severity: randomTemplate.severity,
+        error: randomTemplate.error,
+        timestamp: new Date().toISOString(),
+        metrics: randomTemplate.metrics
+      };
+      
+      document.getElementById('incidentIdBadge').textContent = currentIncident.id;
+      document.getElementById('telemetryView').className = "bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs font-mono text-indigo-300 overflow-x-auto";
+      document.getElementById('telemetryView').textContent = JSON.stringify(currentIncident, null, 2);
+      
+      document.getElementById('analyzeButton').disabled = false;
+
+      const primaryEmail = document.getElementById('primaryEmail').textContent;
+      const primaryName = document.getElementById('primaryName').textContent;
+      const logContainer = document.getElementById('auditLogContainer');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      logContainer.insertAdjacentHTML('afterbegin', `
+        <div class="p-3 rounded bg-amber-950/30 border border-amber-800/50 text-slate-300 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-amber-400">🚨</span>
+            <div>
+              <p class="font-medium text-slate-200">Webhook Ingested: <span class="text-indigo-300 font-mono">${currentIncident.id}</span></p>
+              <p class="text-[11px] text-slate-400">Alert routed to primary: <strong class="text-indigo-400">${primaryName} &lt;${primaryEmail}&gt;</strong></p>
+            </div>
+          </div>
+          <span class="text-slate-500 text-[11px]">${timestamp}</span>
+        </div>
+      `);
+    }
+
+    async function runAiAnalysis() {
+      if (!currentIncident) return;
+
+      const apiKey = document.getElementById('apiKeyInput').value.trim();
+      const playbookContainer = document.getElementById('aiPlaybookContent');
+      const badgeElement = document.getElementById('aiExecutionModeBadge');
+      const buttonElement = document.getElementById('analyzeButton');
+
+      buttonElement.disabled = true;
+      playbookContainer.className = "text-sm text-slate-300 space-y-3 flex items-center justify-center py-6";
+      playbookContainer.innerHTML = '<p class="text-indigo-400 animate-pulse text-xs">🤖 Gemini is analyzing telemetry payload...</p>';
+
+      // 1. MOCK FALLBACK MODE (Advisory & Safe Diagnostic Focus)
+      if (!apiKey) {
+        setTimeout(() => {
+          badgeElement.textContent = "Mode: Mock Advisory Engine (Safe Triage)";
+          badgeElement.className = "text-xs px-2.5 py-1 rounded-full font-mono bg-blue-950 text-blue-400 border border-blue-800";
+          
+          let specificCause = "Elevated error rate and resource contention detected in service telemetry.";
+          let diagnosticCommand = "kubectl logs -n operations deployment/oncall-ops --tail=100";
+          
+          if (currentIncident.service.includes("db")) {
+            specificCause = "Database connection pool saturation. Active workers are holding connections longer than expected TTL.";
+            diagnosticCommand = "kubectl exec -it deployment/operations-db -- pg_stat_activity";
+          } else if (currentIncident.service.includes("worker")) {
+            specificCause = "Container memory limit breach resulting in OOM termination during intensive heap allocation.";
+            diagnosticCommand = "kubectl describe pod -n operations -l app=oncall-worker";
+          }
+
+          playbookContainer.className = "text-sm text-slate-300 space-y-3 text-left";
+          playbookContainer.innerHTML = `
+            <div class="space-y-3">
+              <div>
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Incident Summary & Root Cause</span>
+                <p class="text-slate-200 mt-1">${currentIncident.error}. ${specificCause}</p>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Confidence Assessment & Uncertainty</span>
+                <p class="text-emerald-400 font-bold">89% Confidence <span class="text-slate-400 font-normal text-xs">(Advisory triage only. No automated mutations recommended.)</span></p>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Recommended Safe Diagnostic Playbook</span>
+                <ol class="list-decimal list-inside text-slate-300 space-y-1 mt-1 font-mono text-xs">
+                  <li>Inspect telemetry logs (Read-only): <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">${diagnosticCommand}</code></li>
+                  <li>Verify cluster resource allocation: <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">kubectl top pods -n operations</code></li>
+                  <li>Review recent deployment history (Human approval required for changes): <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">kubectl rollout history deployment/oncall-ops -n operations</code></li>
+                </ol>
+              </div>
+            </div>
+          `;
+          buttonElement.disabled = false;
+        }, 600);
+        return;
+      }
+
+      // 2. LIVE GEMINI API MODE
+      try {
+        const promptText = `You are a Senior SRE Incident Commander AI assistant for Tessera Labs AI. 
+Your role is strictly advisory: help with triage, summarize incidents, explain likely causes, and recommend safe READ-ONLY diagnostic steps. 
+CRITICAL RULE: Never recommend automated mutating production changes (such as scaling or restarting) without human approval. 
+If the telemetry payload is missing critical metrics or information, clearly state your uncertainty.
+
+Analyze this incident payload and return:
+1. Incident Summary & Root Cause
+2. Confidence Percentage (and state if uncertainty exists due to missing data)
+3. Numbered Safe Diagnostic Playbook (kubectl read-only commands)
+
+Payload:
+${JSON.stringify(currentIncident)}`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: promptText }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to parse AI response.";
+
+        badgeElement.textContent = "Mode: Live Gemini API (Advisory)";
+        badgeElement.className = "text-xs px-2.5 py-1 rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-800";
+        
+        playbookContainer.className = "text-sm text-slate-300 space-y-3 text-left";
+        playbookContainer.innerHTML = `<div class="whitespace-pre-wrap text-slate-200 text-xs font-mono leading-relaxed">${resultText}</div>`;
+      } catch (err) {
+        console.error("Live API call failed:", err);
+        playbookContainer.className = "text-sm text-slate-300 space-y-3 text-center py-4";
+        playbookContainer.innerHTML = `<p class="text-rose-400 text-xs">Error connecting to Gemini API. Clear API key input to use zero-setup Mock Mode.</p>`;
+      } finally {
+        buttonElement.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

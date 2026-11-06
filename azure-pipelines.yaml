@@ -1,0 +1,54 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  # Replace with actual Azure resource names when deploying to cloud
+  azureContainerRegistry: 'myacr.azurecr.io'
+  imageRepository: 'oncall-ops'
+  containerRegistryServiceConnection: 'AzureRegistryConnection'
+  kubernetesServiceConnection: 'AzureAKSConnection'
+  namespace: 'operations'
+
+stages:
+- stage: BuildAndPush
+  displayName: Build & Push Image to ACR
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      displayName: Build and Push Docker Image
+      inputs:
+        command: buildAndPush
+        containerRegistry: $(containerRegistryServiceConnection)
+        repository: $(imageRepository)
+        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        tags: |
+          $(Build.BuildId)
+          latest
+
+- stage: DeployToAKS
+  displayName: Deploy Helm Chart to Azure AKS
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: HelmDeploy@1
+      displayName: Upgrade Helm Release on AKS
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceConnection: $(kubernetesServiceConnection)
+        namespace: $(namespace)
+        command: 'upgrade'
+        chartType: 'FilePath'
+        chartPath: '$(Build.SourcesDirectory)/chart'
+        releaseName: 'oncall-ops'
+        valueFile: '$(Build.SourcesDirectory)/chart/values.yaml'
+        overrideValues: |
+          image.repository=$(azureContainerRegistry)/$(imageRepository)
+          image.tag=$(Build.BuildId)
+          service.type=LoadBalancer
