@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main
+      - master
 
 variables:
   # Replace with actual Azure resource names when deploying to cloud

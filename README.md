@@ -7,7 +7,13 @@ An enterprise-grade, zero-dependency AI On-Call Operations & Automated Incident 
 ## Project Structure
 
 oncall-ops-poc/
-├── .vscode/                 # IDE workspace configuration & settings
+├── docs/                   # Helm chart deployment package
+│   ├── demo.mp4            # Demo video of installation and navigation
+│   └── screenshots/
+│       ├── 1-cluster-deployment.png            # Image of container build, deployment and pod running   
+│       ├── 2-dashboard-OC.png                  # Image of the OC rotation
+│       └── 3-indicent-ai.triage.png            # Image of Webhook alert with Gemini recommended action
+│       └── 4-k8s-manifest-inspector.png        # Image of k8s deployment, service and namespace configuration 
 ├── chart/                   # Helm chart deployment package
 │   ├── Chart.yaml
 │   ├── values.yaml
@@ -16,22 +22,29 @@ oncall-ops-poc/
 │       ├── namespace.yaml
 │       └── service.yaml
 ├── Dockerfile               # Nginx container definition
+├── Architecture.md          # Architecture and data flow diagram for Application 
 ├── azure-pipelines.yml      # CI/CD pipeline definition for Azure AKS
 ├── index.html               # Single-file React & Tailwind application
+├── PRD.md                   # Product Requirements Document (PRD) providing detailed objectives of Application
 └── README.md                # Project documentation
 
 ## Local Deployment
 
-Utilizing Rancher-Desktop and Helm for local validation testing. End-User can use their choice of local kubernetes environment. From root directory, user simply can run:
-
+Utilizing Rancher-Desktop and Helm for local validation testing. End-User can use their choice of local kubernetes environment. First verify your local instance is actively running and you are directed to your local Kubernetes Cluster (.kube directory). User will then clone repository and then, from the root directory, user simply can run:
+```
 docker build -t oncall-ops:latest .
-helm apply --install oncall-ops ./chart
-
+helm upgrade --install oncall-ops ./chart
+```
+After install, user can run following command to verify pod is running:
+```
+kubectl get pods -n operations #There should be 1 pod running
+```
+User can now open a web browser of their choosing and navigate to: **localhost:30080**
 
 ## Evidence of Successful Run
 
 ### Visual Demo
-![Dashboard Overview](docs/screenshots/2-dashboard-oncall.png)
+![Dashboard Overview](docs/screenshots/2-dashboard-OC.png)
 
 ### Incident Ingestion & AI Triage Playbook
 ![AI Root Cause Analysis](docs/screenshots/3-incident-ai-triage.png)
@@ -53,8 +66,8 @@ A short video demonstration of the incident dispatch and AI triage workflow is a
 ### Security Awareness
 * **Secret Management:** Sensitive credentials (such as Azure Service Principals and API keys) are injected dynamically via Azure DevOps Pipeline secrets / Kubernetes Secrets rather than stored in repository files.
 * **RBAC & Isolation:** The application deploys to a dedicated `operations` namespace to ensure workload isolation and apply strict Role-Based Access Control (RBAC).
-* **Ingress Security:** Local deployment uses NodePort for simplicity; production AKS deployment expects SSL/TLS termination at the ingress controller.
+* **Ingress Security:** Local deployment uses NodePort for simplicity; production AKS deployment expects SSL/TLS termination at the ingress controller (NGINX, Traefik, Istio, etc.).
 
 ### Observability & Future Enhancements
 * **Metrics & Logging:** Production deployments should integrate Prometheus metrics (`/metrics`) and structured JSON logs forwarded to Azure Log Analytics or Datadog.
-* **Persistent Storage:** Incident history currently operates in-memory for the POC; production architecture should back this with an enterprise datastore (e.g., PostgreSQL / Azure Cosmos DB).
+* **Persistent Storage:** Incident history currently operates in-memory for the POC; production architecture should back this with an enterprise datastore (e.g., PostgreSQL / Azure Cosmos DB / Longhorn (RKE2)).
