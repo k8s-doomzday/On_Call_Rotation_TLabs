@@ -20,7 +20,6 @@ oncall-ops-poc/
 │   ├── values.yaml
 │   └── templates/
 │       ├── deployment.yaml
-│       ├── namespace.yaml
 │       └── service.yaml
 ├── Dockerfile               # Nginx container definition
 ├── Architecture.md          # Architecture and data flow diagram for Application 
@@ -35,7 +34,7 @@ oncall-ops-poc/
 Utilizing Rancher-Desktop and Helm for local validation testing. End-User can use their choice of local kubernetes environment. First verify your local instance is actively running and you are directed to your local Kubernetes Cluster (.kube directory). User will then clone repository and then, from the root directory, user simply can run:
 ```
 docker build -t oncall-ops:latest .
-helm upgrade --install oncall-ops ./chart
+helm upgrade --install oncall-ops ./chart --namespace operations --create-namespace
 ```
 After install, user can run following command to verify pod is running:
 ```
@@ -44,7 +43,7 @@ kubectl get pods -n operations #There should be 1 pod running
 User can now open a web browser of their choosing and navigate to:
 localhost:30080
 
-Gotchas while initial implementation
+Gotchas during initial implementation
 1. Docker container build had cached image, run following to clear cache and ensure full new build.
 ```
 docker build --no-cache -t oncall-ops:latest .
@@ -56,7 +55,7 @@ kubectl rollout restart deployment/oncall-ops-n operations
 
 ## Evidence of Successful Run
 
-### Visual Demo
+### On Call Roster
 ![Dashboard Overview](docs/screenshots/2-dashboard-OC.png)
 
 ### Incident Ingestion & AI Triage Playbook
@@ -84,3 +83,7 @@ A short video demonstration of the incident dispatch and AI triage workflow is a
 ### Observability & Future Enhancements
 * **Metrics & Logging:** Production deployments should integrate Prometheus metrics (`/metrics`) and structured JSON logs forwarded to Azure Log Analytics or Datadog.
 * **Persistent Storage:** Incident history currently operates in-memory for the POC; production architecture should back this with an enterprise datastore (e.g., PostgreSQL / Azure Cosmos DB / Longhorn (RKE2)).
+
+## Cleanup and Uninstall
+
+When done with POC, user can issue following commands to fully uninstall the application and associated resources
