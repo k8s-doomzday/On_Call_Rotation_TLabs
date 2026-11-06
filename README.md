@@ -95,3 +95,8 @@ Verify all resources are gone by running
 ```
 kubectl get all -n operations
 ```
+
+If user wants to completely remove the "operations" namespace, run the following (needs to be done since the namespace creation was done at the helm chart install)
+```
+kubectl delete namespace operations
+```
